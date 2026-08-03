@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alpha Quad — EV Charging Corridor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08120f;
+    --bg-deep:#040908;
+    --surface:#0f1b17;
+    --surface-2:#152520;
+    --border:#213631;
+    --border-strong:#2c4740;
+    --text:#e9f6f1;
+    --text-dim:#84a89c;
+    --text-faint:#4f6e64;
+    --cyan:#00d9ff;
+    --cyan-dim:#0a3a45;
+    --amber:#ffb930;
+    --amber-dim:#4a3712;
+    --mint:#5affb0;
+    --mint-dim:#0f3a2c;
+    --red:#ff4d6d;
+    --red-dim:#3a1420;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 12% -10%, rgba(90,255,176,0.07), transparent),
+      radial-gradient(900px 500px at 92% 5%, rgba(255,185,48,0.06), transparent),
+      radial-gradient(700px 400px at 50% 110%, rgba(0,217,255,0.05), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+  .display{font-family:'Orbitron', sans-serif;}
+
+  /* ---------- LOGIN ---------- */
+  #login{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+  }
+  #login::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(0,217,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,217,255,0.035) 1px, transparent 1px);
+    background-size:42px 42px;
+    mask-image:radial-gradient(circle at 50% 40%, black, transparent 75%);
+    pointer-events:none;
+  }
+  .login-card{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:380px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:40px 32px;
+    text-align:center;
+  }
+  .bolt{
+    width:52px; height:52px;
+    margin:0 auto 18px;
+    border-radius:12px;
+    background:var(--cyan-dim);
+    border:1px solid var(--border-strong);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .bolt svg{width:26px; height:26px;}
+  .login-card h1{
+    font-family:'Orbitron', sans-serif;
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    color:var(--text);
+  }
+  .login-card .tag{
+    font-size:12px;
+    color:var(--text-faint);
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    margin-top:6px;
+    margin-bottom:28px;
+  }
+  .field{
+    text-align:left;
+    margin-bottom:16px;
+  }
+  .field label{
+    display:block;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    background:var(--bg-deep);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px 14px;
+    color:var(--text);
+    font-size:14px;
+    font-family:'JetBrains Mono', monospace;
+    outline:none;
+    transition:border-color 0.15s;
+  }
+  .field input:focus{border-color:var(--cyan);}
+  .field input::placeholder{color:var(--text-faint);}
+  #login button{
+    width:100%;
+    margin-top:8px;
+    padding:13px;
+    border-radius:8px;
+    border:1px solid var(--cyan);
+    background:var(--cyan-dim);
+    color:var(--cyan);
+    font-family:'Orbitron', sans-serif;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background 0.15s;
+  }
+  #login button:hover{background:rgba(0,217,255,0.16);}
+  .login-hint{
+    margin-top:16px;
+    font-size:11px;
+    color:var(--text-faint);
+  }
+  .error-msg{
+    display:none;
+    margin-top:14px;
+    font-size:12px;
+    color:var(--red);
+    background:var(--red-dim);
+    border:1px solid rgba(255,77,109,0.35);
+    border-radius:8px;
+    padding:9px;
+  }
+
+  /* ---------- DASHBOARD ---------- */
+  #dashboard{display:none;}
+  header{
+    position:sticky; top:0; z-index:10;
+    background:rgba(10,14,20,0.9);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    padding:18px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .bolt{width:36px; height:36px; margin:0; border-radius:9px;}
+  .brand .bolt svg{width:18px; height:18px;}
+  .brand-text h1{font-family:'Orbitron', sans-serif; font-size:15px; letter-spacing:0.04em;}
+  .brand-text p{font-size:11px; color:var(--text-faint); letter-spacing:0.06em; margin-top:2px;}
+  .status-pill{
+    display:flex; align-items:center; gap:7px;
+    font-size:11px; color:var(--mint);
+    background:var(--mint-dim);
+    border:1px solid rgba(90,255,176,0.3);
+    padding:6px 12px; border-radius:99px;
+    letter-spacing:0.05em; text-transform:uppercase;
+  }
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--mint); animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.3;}}
+
+  main{max-width:1120px; margin:0 auto; padding:32px 28px 60px;}
+  section{margin-bottom:36px;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;}
+  .section-head h2{font-family:'Orbitron', sans-serif; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim);}
+  .section-head span{font-size:11px; color:var(--text-faint);}
+
+  /* energy flow signature element */
+  .flow-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:26px 28px;
+  }
+  .flow-row{
+    display:grid;
+    grid-template-columns:1fr auto 1fr auto 1fr;
+    align-items:center;
+    gap:6px;
+  }
+  .flow-col{display:flex; flex-direction:column; gap:10px;}
+  .src{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .src .label{font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); display:flex; align-items:center; gap:6px;}
+  .src .val{font-family:'JetBrains Mono', monospace; font-size:18px; font-weight:700; margin-top:4px;}
+  .src.solar .val{color:var(--amber);}
+  .src.wind .val{color:var(--mint);}
+  .src.grid .val{color:var(--text-dim);}
+  .flow-center{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
+  .node{
+    width:84px; height:84px;
+    border-radius:50%;
+    border:1px solid var(--border-strong);
+    background:var(--bg-deep);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+  }
+  .node .v{font-family:'JetBrains Mono', monospace; font-size:16px; font-weight:700; color:var(--cyan);}
+  .node .l{font-size:9px; color:var(--text-faint); letter-spacing:0.06em; text-transform:uppercase; margin-top:2px;}
+  .wire{position:relative; height:2px; background:var(--border-strong); overflow:visible;}
+  .wire .bead{
+    position:absolute; top:-3px; width:8px; height:8px; border-radius:50%;
+    background:var(--cyan); box-shadow:0 0 8px var(--cyan);
+    animation:travel 2.4s linear infinite;
+  }
+  @keyframes travel{from{left:-4%;} to{left:100%;}}
+  .flow-note{margin-top:18px; font-size:11px; color:var(--text-faint); display:flex; gap:18px; flex-wrap:wrap;}
+  .flow-note b{color:var(--text-dim); font-weight:500;}
+
+  /* stat cards */
+  .stat-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;}
+  .stat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 18px;
+  }
+  .stat .l{font-size:10px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-faint); display:flex; align-items:center; gap:6px;}
+  .stat .v{font-family:'JetBrains Mono', monospace; font-size:22px; font-weight:700; margin-top:8px;}
+  .stat.batt .v{color:var(--cyan);}
+  .stat.fly .v{color:var(--mint); font-size:15px;}
+  .stat.ai .v{color:var(--amber); font-size:15px;}
+
+  /* ports */
+  .port-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;}
+  .port{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    position:relative;
+  }
+  .port-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .port-id{font-family:'Orbitron', sans-serif; font-size:13px; font-weight:700; letter-spacing:0.04em;}
+  .badge{
+    font-size:10px; letter-spacing:0.06em; text-transform:uppercase;
+    padding:4px 9px; border-radius:99px; font-weight:500;
+  }
+  .badge.avail{background:var(--mint-dim); color:var(--mint); border:1px solid rgba(90,255,176,0.3);}
+  .badge.occ{background:var(--red-dim); color:var(--red); border:1px solid rgba(255,77,109,0.3);}
+  .port-output{font-size:13px; color:var(--text-dim); margin-bottom:14px;}
+  .port-price{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-top:1px solid var(--border); padding-top:12px;
+  }
+  .port-price .pl{font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-faint);}
+  .port-price .pv{font-family:'JetBrains Mono', monospace; font-size:19px; font-weight:700; color:var(--cyan);}
+  .port.occupied .port-price .pv{color:var(--text-faint);}
+  .port-bar{height:3px; border-radius:2px; background:var(--border); margin-top:12px; overflow:hidden;}
+  .port-bar i{display:block; height:100%; background:var(--mint);}
+  .port.occupied .port-bar i{background:var(--red); width:64%;}
+  .port.available .port-bar i{width:100%;}
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:18px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:11px; color:var(--text-faint);
+  }
+  footer a{color:var(--cyan); text-decoration:none;}
+
+  /* ---------- PHONE-STYLE BATTERY ---------- */
+  .batt-widget{display:flex; align-items:center; gap:12px;}
+  .batt-shell{
+    width:54px; height:26px;
+    border:2px solid var(--text-dim);
+    border-radius:5px;
+    position:relative;
+    padding:2px;
+    display:flex;
+    background:var(--bg-deep);
+  }
+  .batt-shell::after{
+    content:"";
+    position:absolute;
+    right:-5px; top:7px;
+    width:3px; height:10px;
+    background:var(--text-dim);
+    border-radius:0 2px 2px 0;
+  }
+  .batt-fill{
+    height:100%;
+    border-radius:2px;
+    background:var(--mint);
+    transition:width 0.8s ease, background 0.8s ease;
+  }
+  .batt-fill.charging{
+    background-image:repeating-linear-gradient(115deg, rgba(255,255,255,0.22) 0 6px, transparent 6px 14px);
+    background-size:200% 100%;
+    animation:battstripe 1.4s linear infinite;
+  }
+  @keyframes battstripe{from{background-position:0 0;} to{background-position:-28px 0;}}
+  .batt-meta .v{font-family:'JetBrains Mono', monospace; font-size:20px; font-weight:700;}
+  .batt-meta .l{font-size:10px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-faint); display:flex; align-items:center; gap:5px;}
+  .bolt-ico{width:10px; height:10px; color:var(--amber);}
+
+  /* ---------- TOAST ---------- */
+  #toast-stack{
+    position:fixed; bottom:20px; right:20px; z-index:50;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .toast{
+    background:var(--surface-2);
+    border:1px solid var(--border-strong);
+    border-left:3px solid var(--cyan);
+    border-radius:8px;
+    padding:11px 16px;
+    font-size:12px;
+    color:var(--text);
+    min-width:220px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+    animation:toastin 0.25s ease, toastout 0.4s ease 3.6s forwards;
+  }
+  .toast.free{border-left-color:var(--mint);}
+  @keyframes toastin{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+  @keyframes toastout{to{opacity:0; transform:translateY(-6px);}}
+
+  .wait-tag{font-size:10px; color:var(--text-faint); margin-top:6px;}
+  .co2-note{font-size:11px; color:var(--text-faint); margin-top:6px;}
+
+  /* ---------- SPARKLINE ---------- */
+  .spark-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px 18px 8px;
+    margin-top:12px;
+  }
+  .spark-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;}
+  .spark-head .t{font-size:10px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-faint);}
+  .spark-legend{display:flex; gap:14px; font-size:10px; color:var(--text-faint);}
+  .spark-legend span{display:flex; align-items:center; gap:5px;}
+  .swatch{width:8px; height:8px; border-radius:50%;}
+
+  /* ---------- RESERVE ---------- */
+  .reserve-btn{
+    width:100%; margin-top:10px;
+    padding:8px; border-radius:7px;
+    border:1px solid var(--border-strong);
+    background:transparent; color:var(--text-dim);
+    font-size:11px; letter-spacing:0.04em; text-transform:uppercase;
+    cursor:pointer; transition:all 0.15s;
+  }
+  .port.available .reserve-btn:hover{border-color:var(--mint); color:var(--mint);}
+  .port.occupied .reserve-btn{opacity:0.35; cursor:not-allowed;}
+  .port.reserved{border-color:var(--amber);}
+  .port.reserved .badge{background:var(--amber-dim); color:var(--amber); border:1px solid rgba(255,185,48,0.35);}
+  .port.reserved .reserve-btn{border-color:var(--amber); color:var(--amber);}
+
+  @media(max-width:760px){
+    .flow-row{grid-template-columns:1fr; }
+    .wire{width:2px; height:24px; margin:0 auto;}
+    .wire .bead{left:-3px; top:-4%; animation:travelV 2.4s linear infinite;}
+    @keyframes travelV{from{top:-4%;} to{top:100%;}}
+    .stat-grid, .port-grid{grid-template-columns:repeat(2,1fr);}
+    header{padding:16px 18px;}
+    main{padding:24px 18px 48px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="login-card">
+    <div class="bolt">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00d9ff" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>
+    </div>
+    <h1>ALPHA QUAD</h1>
+    <div class="tag">EV Charging Corridor</div>
+    <div class="field">
+      <label for="username">Operator ID</label>
+      <input type="text" id="username" placeholder="admin">
+    </div>
+    <div class="field">
+      <label for="password">Access Code</label>
+      <input type="password" id="password" placeholder="••••">
+    </div>
+    <button onclick="login()">Authenticate</button>
+    <div class="error-msg" id="errorMsg">Invalid credentials. Try again.</div>
+    <div class="login-hint">NH Highway Charging Station · Corridor 04</div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <header>
+    <div class="brand">
+      <div class="bolt">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00d9ff" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>ALPHA QUAD</h1>
+        <p>NH Highway Charging Station</p>
+      </div>
+    </div>
+    <div class="status-pill"><span class="dot"></span> Grid nominal</div>
+  </header>
+
+  <main>
+    <section>
+      <div class="section-head">
+        <h2>Energy flow</h2>
+        <span id="clock" class="mono"></span>
+      </div>
+      <div class="flow-card">
+        <div class="flow-row">
+          <div class="flow-col">
+            <div class="src solar">
+              <div class="label">☀ Solar array</div>
+              <div class="val">18.5 kW</div>
+            </div>
+            <div class="src wind">
+              <div class="label">🌬 Vertical-axis wind</div>
+              <div class="val">12.3 kW</div>
+            </div>
+            <div class="src grid">
+              <div class="label">⚡ Grid backup</div>
+              <div class="val">Standby</div>
+            </div>
+          </div>
+          <div class="wire"><span class="bead" style="animation-delay:0s"></span></div>
+          <div class="flow-center">
+            <div class="batt-widget">
+              <div class="batt-shell"><div class="batt-fill" id="battFill" style="width:82%"></div></div>
+              <div class="batt-meta">
+                <div class="v" id="battPct">82%</div>
+                <div class="l" id="battLabel">Battery SOC</div>
+              </div>
+            </div>
+            <div class="node" style="width:70px;height:70px;">
+              <div class="v" style="font-size:12px; color:var(--mint);">Active</div>
+              <div class="l">Flywheel</div>
+            </div>
+          </div>
+          <div class="wire"><span class="bead" style="animation-delay:0.8s"></span></div>
+          <div class="flow-col">
+            <div class="src">
+              <div class="label">🔌 Ports drawing</div>
+              <div class="val" style="color:var(--cyan);">30.8 kW</div>
+            </div>
+            <div class="src">
+              <div class="label">🤖 AI dispatch</div>
+              <div class="val" style="font-size:14px; color:var(--amber);">Optimizing mix</div>
+            </div>
+          </div>
+        </div>
+        <div class="flow-note">
+          <span><b>Source priority:</b> solar → wind → battery → flywheel → grid</span>
+          <span><b>Emergency:</b> +91 9876543210</span>
+        </div>
+      </div>
+      <div class="spark-card">
+        <div class="spark-head">
+          <span class="t">Power output · last 40 readings</span>
+          <div class="spark-legend">
+            <span><i class="swatch" style="background:var(--amber)"></i>Solar</span>
+            <span><i class="swatch" style="background:var(--mint)"></i>Wind</span>
+          </div>
+        </div>
+        <canvas id="sparkCanvas" height="70" style="width:100%; display:block;"></canvas>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>System status</h2></div>
+      <div class="stat-grid">
+        <div class="stat batt">
+          <div class="l">🔋 Battery reserve</div>
+          <div class="v" id="battReserve">82%</div>
+        </div>
+        <div class="stat fly">
+          <div class="l">⚙ Flywheel</div>
+          <div class="v">Active</div>
+        </div>
+        <div class="stat ai">
+          <div class="l">🤖 AI energy mgmt</div>
+          <div class="v">Running</div>
+        </div>
+        <div class="stat" style="border-color:rgba(90,255,176,0.25);">
+          <div class="l">🌱 CO₂ offset today</div>
+          <div class="v" id="co2Val" style="color:var(--mint); font-size:18px;">0 kg</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Charging port availability</h2>
+        <span>4 bays · live</span>
+      </div>
+      <div class="port-grid" id="portGrid">
+
+        <div class="port available" id="port-1" data-name="Port 01">
+          <div class="port-top">
+            <span class="port-id">Port 01</span>
+            <span class="badge avail">Available</span>
+          </div>
+          <div class="port-output">120 kW · DC Fast</div>
+          <div class="port-price"><span class="pl">Cost / unit</span><span class="pv">₹9</span></div>
+          <div class="port-bar"><i></i></div>
+          <div class="wait-tag"></div>
+          <button class="reserve-btn" onclick="reservePort('port-1')">Reserve</button>
+        </div>
+
+        <div class="port occupied" id="port-2" data-name="Port 02">
+          <div class="port-top">
+            <span class="port-id">Port 02</span>
+            <span class="badge occ">Occupied</span>
+          </div>
+          <div class="port-output">60 kW · Standard</div>
+          <div class="port-price"><span class="pl">Cost / unit</span><span class="pv">₹8</span></div>
+          <div class="port-bar"><i></i></div>
+          <div class="wait-tag">Est. free in 12 min</div>
+          <button class="reserve-btn" disabled onclick="reservePort('port-2')">Reserve</button>
+        </div>
+
+        <div class="port available" id="port-3" data-name="Port 03">
+          <div class="port-top">
+            <span class="port-id">Port 03</span>
+            <span class="badge avail">Available</span>
+          </div>
+          <div class="port-output">30 kW · AC</div>
+          <div class="port-price"><span class="pl">Cost / unit</span><span class="pv">₹7</span></div>
+          <div class="port-bar"><i></i></div>
+          <div class="wait-tag"></div>
+          <button class="reserve-btn" onclick="reservePort('port-3')">Reserve</button>
+        </div>
+
+        <div class="port available" id="port-4" data-name="Port 04">
+          <div class="port-top">
+            <span class="port-id">Port 04</span>
+            <span class="badge avail">Available</span>
+          </div>
+          <div class="port-output">150 kW · Ultra Fast</div>
+          <div class="port-price"><span class="pl">Cost / unit</span><span class="pv">₹10</span></div>
+          <div class="port-bar"><i></i></div>
+          <div class="wait-tag"></div>
+          <button class="reserve-btn" onclick="reservePort('port-4')">Reserve</button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>AI-Powered Hybrid Renewable EV Charging Corridor</span>
+    <span>Emergency: <a href="tel:+919876543210">+91 9876543210</a></span>
+  </footer>
+</div>
+
+<div id="toast-stack"></div>
+
+<script>
+function login(){
+  var user = document.getElementById("username").value;
+  var pass = document.getElementById("password").value;
+  var err = document.getElementById("errorMsg");
+  if(user === "admin" && pass === "1234"){
+    document.getElementById("login").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    startClock();
+  } else {
+    err.style.display = "block";
+  }
+}
+document.getElementById("password").addEventListener("keyup", function(e){
+  if(e.key === "Enter") login();
+});
+
+function startClock(){
+  var el = document.getElementById("clock");
+  function tick(){
+    var d = new Date();
+    el.textContent = d.toLocaleTimeString('en-IN', {hour12:false});
+  }
+  tick();
+  setInterval(tick, 1000);
+  startTelemetry();
+}
+
+/* ---------- BATTERY HEALTH (phone-style) ---------- */
+var soc = 82;
+function renderBattery(){
+  var fill = document.getElementById("battFill");
+  var pct = document.getElementById("battPct");
+  var label = document.getElementById("battLabel");
+  var reserve = document.getElementById("battReserve");
+  var charging = soc < 95;
+
+  fill.style.width = soc + "%";
+  pct.textContent = soc + "%";
+  reserve.textContent = soc + "%";
+
+  var color = soc > 50 ? "var(--mint)" : soc > 20 ? "var(--amber)" : "var(--red)";
+  fill.style.background = color;
+  pct.style.color = color;
+  fill.classList.toggle("charging", charging);
+  label.innerHTML = charging
+    ? '<svg class="bolt-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg> Charging'
+    : "Battery SOC";
+}
+
+/* ---------- LIVE TELEMETRY DRIFT ---------- */
+var co2Total = 0;
+var solarHist = [];
+var windHist = [];
+var HIST_MAX = 40;
+
+function drift(el, base, spread, decimals, suffix){
+  var v = (base + (Math.random() * spread * 2 - spread));
+  el.textContent = v.toFixed(decimals) + suffix;
+  return v;
+}
+
+function drawSpark(){
+  var canvas = document.getElementById("sparkCanvas");
+  if(!canvas) return;
+  var w = canvas.clientWidth || 400;
+  var h = 70;
+  canvas.width = w * devicePixelRatio;
+  canvas.height = h * devicePixelRatio;
+  var ctx = canvas.getContext("2d");
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  ctx.clearRect(0, 0, w, h);
+
+  function plot(data, color, maxVal){
+    if(data.length < 2) return;
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    data.forEach(function(v, i){
+      var x = (i / (HIST_MAX - 1)) * w;
+      var y = h - 6 - (v / maxVal) * (h - 14);
+      if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+  plot(solarHist, "#ffb930", 24);
+  plot(windHist, "#5affb0", 20);
+}
+
+function startTelemetry(){
+  var solarEl = document.querySelectorAll(".src.solar .val")[0];
+  var windEl = document.querySelectorAll(".src.wind .val")[0];
+  var portsEl = document.querySelectorAll(".src .val")[3];
+  var co2El = document.getElementById("co2Val");
+
+  renderBattery();
+
+  setInterval(function(){
+    var solarKw = drift(solarEl, 18.5, 1.4, 1, " kW");
+    var windKw = drift(windEl, 12.3, 2.1, 1, " kW");
+    if(portsEl) drift(portsEl, 30.8, 3, 1, " kW");
+
+    solarHist.push(solarKw); if(solarHist.length > HIST_MAX) solarHist.shift();
+    windHist.push(windKw); if(windHist.length > HIST_MAX) windHist.shift();
+    drawSpark();
+
+    soc = Math.max(4, Math.min(99, soc + (Math.random() * 2 - 0.6)));
+    soc = Math.round(soc);
+    renderBattery();
+
+    co2Total += (solarKw + windKw) * (2 / 3600) * 0.82;
+    co2El.textContent = co2Total.toFixed(1) + " kg";
+  }, 3000);
+
+  setInterval(simulatePortChange, 9000);
+  window.addEventListener("resize", drawSpark);
+}
+
+/* ---------- RESERVE A PORT ---------- */
+function reservePort(id){
+  var port = document.getElementById(id);
+  if(!port || port.classList.contains("occupied")) return;
+  var btn = port.querySelector(".reserve-btn");
+  var name = port.dataset.name;
+
+  if(port.classList.contains("reserved")){
+    port.classList.remove("reserved");
+    btn.textContent = "Reserve";
+    showToast(name + " reservation cancelled", "");
+  } else {
+    document.querySelectorAll(".port.reserved").forEach(function(p){
+      p.classList.remove("reserved");
+      p.querySelector(".reserve-btn").textContent = "Reserve";
+    });
+    port.classList.add("reserved");
+    btn.textContent = "Reserved · hold 10 min";
+    showToast(name + " reserved for 10 minutes", "free");
+  }
+}
+
+/* ---------- PORT AVAILABILITY SIMULATION ---------- */
+function simulatePortChange(){
+  var ports = Array.prototype.slice.call(document.querySelectorAll(".port:not(.reserved)"));
+  if(!ports.length) return;
+  var target = ports[Math.floor(Math.random() * ports.length)];
+  var isOccupied = target.classList.contains("occupied");
+  var badge = target.querySelector(".badge");
+  var wait = target.querySelector(".wait-tag");
+  var btn = target.querySelector(".reserve-btn");
+  var name = target.dataset.name;
+
+  if(isOccupied){
+    target.classList.remove("occupied");
+    target.classList.add("available");
+    badge.textContent = "Available";
+    badge.className = "badge avail";
+    wait.textContent = "";
+    btn.removeAttribute("disabled");
+    showToast(name + " just freed up", "free");
+  } else {
+    target.classList.remove("available");
+    target.classList.add("occupied");
+    badge.textContent = "Occupied";
+    badge.className = "badge occ";
+    wait.textContent = "Est. free in " + (8 + Math.floor(Math.random() * 20)) + " min";
+    btn.setAttribute("disabled", "true");
+    showToast(name + " now occupied", "");
+  }
+}
+
+function showToast(msg, kind){
+  var stack = document.getElementById("toast-stack");
+  var t = document.createElement("div");
+  t.className = "toast " + kind;
+  t.textContent = msg;
+  stack.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 4000);
+}
+</script>
+
+</body>
+</html>
